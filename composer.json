@@ -4,6 +4,5 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "vtulse/aes-php": "^1.3"
     }
 }
