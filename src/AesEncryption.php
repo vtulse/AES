@@ -11,7 +11,7 @@
  *
  * @author Tasos M. Adamopoulos
  */
-namespace Vtulse\Aes;
+namespace AesEncryption;
 
 class AesEncryption {
     private $modes = [
