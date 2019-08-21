@@ -9,7 +9,7 @@
  * Encrypted data format: salt[16] + iv[16] + ciphertext[n] + mac[32].
  * Ciphertext authenticity is verified with HMAC SHA256.
  *
- * @author Tasos M. Adamopoulos
+ * @author Vipul Tulse
  */
 namespace AesEncryption;
 
