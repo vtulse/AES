@@ -1,16 +1,18 @@
 <?php
-    
+
 /**
- * Encrypts data and files using AES CBC/CFB - 128/192/256 bits. 
- * 
- * The encryption and authentication keys 
+ * Encrypts data and files using AES CBC/CFB - 128/192/256 bits.
+ *
+ * The encryption and authentication keys
  * are derived from the supplied key/password using HKDF/PBKDF2.
  * The key can be set either with `setMasterKey` or with `randomKeyGen`.
  * Encrypted data format: salt[16] + iv[16] + ciphertext[n] + mac[32].
  * Ciphertext authenticity is verified with HMAC SHA256.
- * 
+ *
  * @author Tasos M. Adamopoulos
  */
+namespace AesEncryption;
+
 class AesEncryption {
     private $modes = [
         "CBC" => "AES-%d-CBC", "CFB" => "AES-%d-CFB8"
@@ -27,9 +29,9 @@ class AesEncryption {
     public $keyIterations = 20000;
     /** @var bool $base64 Accepts and returns base64 encoded data. */
     public $base64 = true;
-    /** 
+    /**
      * Creates a new AesEncryption object.
-     * 
+     *
      * @param string $mode Optional, the AES mode (CBC, CFB).
      * @param int $size Optional, the key size (128, 192, 256).
      * @throws UnexpectedValueException if the mode or size is not supported.
@@ -44,14 +46,14 @@ class AesEncryption {
             throw new UnexpectedValueException("Invalid key size!");
         }
     }
-    
+
     /**
      * Encrypts data using a key or the supplied password.
      *
-     * The password is not required if a master key has been set 
-     * (either with `randomKeyGen` or with `setMasterKey`). 
+     * The password is not required if a master key has been set
+     * (either with `randomKeyGen` or with `setMasterKey`).
      * If a password is supplied, it will be used to create a key with PBKDF2.
-     * 
+     *
      * @param string $data The plaintext.
      * @param string $password Optional, the password.
      * @return string|null Encrypted data: salt + iv + ciphertext + mac.
@@ -63,9 +65,9 @@ class AesEncryption {
             list($aesKey, $macKey) = $this->keys($salt, $password);
             $cipher = $this->cipher($aesKey, $iv, Cipher::Encrypt);
             $ciphertext = $cipher->update($data, true);
-            $mac = $this->sign($iv.$ciphertext, $macKey); 
+            $mac = $this->sign($iv.$ciphertext, $macKey);
             $encrypted = $salt . $iv . $ciphertext . $mac;
-            
+
             if ($this->base64) {
                 $encrypted = base64_encode($encrypted);
             }
@@ -74,14 +76,14 @@ class AesEncryption {
             $this->errorHandler($e);
         }
     }
-    
+
     /**
      * Decrypts data using a key or the supplied password.
      *
-     * The password is not required if a master key has been set 
-     * (either with `randomKeyGen` or with `setMasterKey`). 
+     * The password is not required if a master key has been set
+     * (either with `randomKeyGen` or with `setMasterKey`).
      * If a password is supplied, it will be used to create a key with PBKDF2.
-     * 
+     *
      * @param string $data The ciphertext.
      * @param string $password Optional, the password.
      * @return string|null Plaintext.
@@ -100,7 +102,7 @@ class AesEncryption {
             $mac = mb_substr($data, -$this->macLen, $this->macLen, "8bit");
             list($aesKey, $macKey) = $this->keys($salt, $password);
             $this->verify($iv.$ciphertext, $mac, $macKey);
-            
+
             $cipher = $this->cipher($aesKey, $iv, Cipher::Decrypt);
             $plaintext = $cipher->update($ciphertext, true);
             return $plaintext;
@@ -110,16 +112,16 @@ class AesEncryption {
             $this->errorHandler($e);
         }
     }
-    
+
     /**
      * Encrypts files using a key or the supplied password.
-     * 
-     * The password is not required if a master key has been set 
-     * (either with `randomKeyGen` or with `setMasterKey`). 
+     *
+     * The password is not required if a master key has been set
+     * (either with `randomKeyGen` or with `setMasterKey`).
      * If a password is supplied, it will be used to create a key with PBKDF2.
      * The original file is not modified; a new encrypted file is created.
-     * 
-     * @param string $path The file path. 
+     *
+     * @param string $path The file path.
      * @param string $password Optional, the password.
      * @return string|null Encrypted file path.
      */
@@ -149,25 +151,25 @@ class AesEncryption {
             $this->errorHandler($e);
         }
     }
-    
+
     /**
      * Decrypts files using a key or the supplied password.
-     * 
-     * The password is not required if a master key has been set 
-     * (either with `randomKeyGen` or with `setMasterKey`). 
+     *
+     * The password is not required if a master key has been set
+     * (either with `randomKeyGen` or with `setMasterKey`).
      * If a password is supplied, it will be used to create a key with PBKDF2.
      * The original file is not modified; a new decrypted file is created.
-     * 
-     * @param string $path The file path. 
+     *
+     * @param string $path The file path.
      * @param string $password Optional, the password.
      * @return string|null Decrypted file path.
      */
-    public function decryptFile($path, $password = null) {    
+    public function decryptFile($path, $password = null) {
         try {
             if (($fp = fopen($path, "rb")) === false) {
                 throw new RuntimeException("Can't access '$path'!");
             }
-            $salt = fread($fp, $this->saltLen); 
+            $salt = fread($fp, $this->saltLen);
             $iv = fread($fp, $this->ivLen);
             fseek($fp, filesize($path) - $this->macLen);
             $mac = fread($fp, $this->macLen);
@@ -194,11 +196,11 @@ class AesEncryption {
             $this->errorHandler($e);
         }
     }
-    
+
     /**
      * Sets a new master key.
      * This key will be used to create the encryption and authentication keys.
-     * 
+     *
      * @param string $key The new master key.
      * @param bool $raw Optional, expexts raw bytes (not base64-encoded).
      */
@@ -212,7 +214,7 @@ class AesEncryption {
     }
     /**
      * Returns the master key (or null if the key is not set).
-     * 
+     *
      * @param bool $raw Optional, returns raw bytes (not base64-encoded).
      * @return string|null The master key.
      */
@@ -228,7 +230,7 @@ class AesEncryption {
     /**
      * Generates a new random key.
      * This key will be used to create the encryption and authentication keys.
-     * 
+     *
      * @param int $keyLen Optional, the key size.
      * @param bool $raw Optional, returns raw bytes (not base64-encoded).
      * @return string The new master key.
@@ -240,7 +242,7 @@ class AesEncryption {
         }
         return $this->masterKey;
     }
-    
+
     /**
      * Handles exceptions (prints the error message by default).
      */
@@ -250,13 +252,13 @@ class AesEncryption {
     /**
      * Derives encryption and authentication keys from a key or password.
      * If the password is not null, it will be used to create the keys.
-     * 
+     *
      * @throws RuntimeException if the master key or password is not set.
      */
     private function keys($salt, $password = null) {
         if ($password !== null) {
             $dkey = openssl_pbkdf2(
-                $password, $salt, $this->keyLen + $this->macKeyLen, 
+                $password, $salt, $this->keyLen + $this->macKeyLen,
                 $this->keyIterations, "SHA512"
             );
         } elseif ($this->masterKey !== null) {
@@ -267,11 +269,11 @@ class AesEncryption {
             throw new RuntimeException('No password or key specified!');
         }
         return array(
-            mb_substr($dkey, 0, $this->keyLen, "8bit"), 
+            mb_substr($dkey, 0, $this->keyLen, "8bit"),
             mb_substr($dkey, $this->keyLen, $this->macKeyLen, "8bit")
         );
     }
-    
+
     /**
      * Returns a new Cipher object; used for encryption / decryption.
      */
@@ -294,7 +296,7 @@ class AesEncryption {
     private function sign($data, $key) {
         return hash_hmac("SHA256", $data, $key, true);
     }
-    
+
     /**
      * Verifies the authenticity of ciphertext.
      * @throws UnexpectedValueException if MAC is invalid.
@@ -303,7 +305,7 @@ class AesEncryption {
         $dataMac = $this->sign($data, $key);
         $this->compareMacs($mac, $dataMac);
     }
-    
+
     /**
      * Computes the MAC of ciphertext, used for ciphertext authentication.
      */
@@ -314,7 +316,7 @@ class AesEncryption {
         }
         return $hmac->digest();
     }
-    
+
     /**
      * Verifies the authenticity of ciphertext.
      * @throws UnexpectedValueException if MAC is invalid.
@@ -323,7 +325,7 @@ class AesEncryption {
         $fileMac = $this->signFile($path, $key, $this->saltLen, $this->macLen);
         $this->compareMacs($mac, $fileMac);
     }
-    
+
     /**
      * A generator that reads a file and yields chunks of data.
      * Chunk size must be a nultiple of the block size (16 bytes).
@@ -332,8 +334,8 @@ class AesEncryption {
         $size = 1024;
         $end = filesize($path) - $end;
         $fp = fopen($path, "rb");
-        $pos = ($beg > 0) ? mb_strlen(fread($fp, $beg), "8bit") : $beg; 
-        
+        $pos = ($beg > 0) ? mb_strlen(fread($fp, $beg), "8bit") : $beg;
+
         if ($fp === false || $end === false) {
             throw new RuntimeException("Can't access file '$path'!");
         }
@@ -345,7 +347,7 @@ class AesEncryption {
         }
         fclose($fp);
     }
-    
+
     /**
      * Safely compares two byte arrays, used for ciphertext uthentication.
      */
@@ -387,11 +389,11 @@ class AesEncryption {
 }
 /**
  * Encrypts data using AES. Supported modes: CBC, CFB.
- * 
- * This class is a wrapper for openssl_ encrypt/decrypt functions, 
+ *
+ * This class is a wrapper for openssl_ encrypt/decrypt functions,
  * that can be used to encrypt multiple chunks of data.
  * The data size must be a multiple of the block size (16 bytes).
- * Note that this class is a helper of AesEncryption 
+ * Note that this class is a helper of AesEncryption
  * and should NOT be used on its own.
  */
 class Cipher {
@@ -403,7 +405,7 @@ class Cipher {
     const Decrypt = "decrypt";
     /**
      * Creates a new Cipher object.
-     * 
+     *
      * @param string $cipher The encryption algorithm.
      * @param string $method The encryption method.
      * @param string $key The key.
@@ -418,11 +420,11 @@ class Cipher {
     }
     /**
      * Encrypts or decrypts a chunk of data.
-     * 
+     *
      * The data size must be a multiple of 16 (unless it is the last chunk).
-     * It is necessary to set `$final` to true for the last chunk, 
+     * It is necessary to set `$final` to true for the last chunk,
      * because it pads and unpads the data in CBC mode.
-     * 
+     *
      * @throws RuntimeException on openssl error or padding error.
      */
     public function update($data, $final = false) {
@@ -461,9 +463,9 @@ class Cipher {
         }
         return mb_substr($data, 0, -$pad, "8bit");
     }
-    
+
     /**
-     * Returns the last block of ciphertext, 
+     * Returns the last block of ciphertext,
      * which is used as an IV for openssl, to chain multiple chunks.
      */
     private function lastBlock($data) {
@@ -472,10 +474,10 @@ class Cipher {
 }
 /**
  * A HMAC with SHA256 algorithm implementation.
- * 
- * Because it has an update method, it can be used for large data, 
+ *
+ * Because it has an update method, it can be used for large data,
  * that can't be hashed with hash_hmac or hash_hmac_file.
- * Note that this class is a helper of AesEncryption  
+ * Note that this class is a helper of AesEncryption
  * and should NOT be used on its own.
  */
 class HmacSha256 {
@@ -496,19 +498,19 @@ class HmacSha256 {
         hash_update($this->outer, $oKey);
         $this->update($data);
     }
-    
+
     /**
      * Updates the HMAC with new data.
-     * 
+     *
      * @param string $data The data.
      */
     public function update($data) {
         hash_update($this->inner, $data);
     }
-    
+
     /**
      * Returns the computed HMAC.
-     * 
+     *
      * @param bool $raw Optional, returns raw bytes.
      * @return string The HMAC.
      */
@@ -517,7 +519,7 @@ class HmacSha256 {
         hash_update($this->outer, $innerHash);
         return hash_final($this->outer, $raw);
     }
-    
+
     /**
      * XORs the inner and outer keys with ipad/opad values.
      */
@@ -528,8 +530,8 @@ class HmacSha256 {
         $trans = array_combine(array_map($int2chr, range(0, 256)), $values);
         return strtr($key, $trans);
     }
-    
-    /** 
+
+    /**
      * Pads the key to match the hash block size.
      */
     private function zeroPadKey($key) {

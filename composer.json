@@ -1,5 +1,20 @@
 {
-    "name": "vtulse/aes-php",
-    "description": "AES Key Wrap for PHP.",
-    "license": "MIT"
+    "name": "vtulse/aes-php-lib",
+    "description": "AES encryption library",
+    "keywords": ["aes","encryption"],
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Vipul Tulse"
+        }
+    ],
+    "require-dev" : {
+      "php" : ">=5.3.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "VipulAES": "src/"
+        }
+    }
 }
