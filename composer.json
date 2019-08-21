@@ -1,8 +1,5 @@
 {
     "name": "vtulse/aes-php",
     "description": "AES Key Wrap for PHP.",
-    "type": "library",
-    "license": "MIT",
-    "require": {
-    }
+    "license": "MIT"
 }
