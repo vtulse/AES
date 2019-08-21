@@ -1,5 +1,5 @@
 {
-    "name": "spomky-labs/aes-key-wrap",
+    "name": "vtulse/aes-php",
     "description": "AES Key Wrap for PHP.",
     "type": "library",
     "license": "MIT",
