@@ -1,12 +1,13 @@
 {
-    "name": "vtulse/aes-php-lib",
+    "name": "vtulse/aes-encryption",
     "description": "AES encryption library",
     "keywords": ["aes","encryption"],
     "type": "library",
     "license": "MIT",
     "authors": [
         {
-            "name": "Vipul Tulse"
+            "name": "Vipul Tulse",
+            "role": "Developer"
         }
     ],
     "require-dev" : {
